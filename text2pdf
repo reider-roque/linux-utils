@@ -1,0 +1,6 @@
+#!/bin/env bash
+
+filename=$(basename "$1")
+enscript -p "$filename.ps" "$1"
+ps2pdf "$filename.ps" "$filename.pdf"
+rm -rf "$filename.ps"
