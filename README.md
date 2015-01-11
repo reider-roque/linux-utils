@@ -23,5 +23,6 @@ vim ~/.bashrc
     fi
 # Reopen your interfactive non-login shell
 
-# The above setup will make ~/.bashrc.d/ directory to behave for the non-login interactive shells the same way /etc/profile.d/ directory behaves for login interactive shell.
+# The above setup will have ~/.bashrc.d/ directory behave for the non-login interactive
+# shells the same way /etc/profile.d/ directory behaves for login interactive shell.
 ```
