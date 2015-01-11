@@ -12,7 +12,7 @@ This project is just a bunch of one-liners that solve some simple task in Linux.
 mkdir ~/.bashrc.d
 mv activate_virtualenv.sh ~/.bashrc.d/
 vim ~/.bashrc
-    # Append the following lines in the very end
+    # Append the following lines at the end of ~/.bashrc
     if [ -d ~/.bashrc.d ]; then
         for i in ~/.bashrc.d/*.sh; do
             if [ -r $i ]; then
@@ -22,4 +22,6 @@ vim ~/.bashrc
         unset i
     fi
 # Reopen your interfactive non-login shell
+
+# The above setup will make ~/.bashrc.d/ directory to behave for the non-login interactive shells the same way /etc/profile.d/ directory behaves for login interactive shell.
 ```
