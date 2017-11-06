@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 filename=$(basename "$1")
 enscript -p "$filename.ps" "$1"
