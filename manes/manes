@@ -1,0 +1,99 @@
+#!/bin/bash
+
+SCRIPT_NAME=$(basename $0)
+
+##### HELPER FUNCTIONS BEGIN #####
+
+function show_help {
+cat <<EOF
+Usage: $SCRIPT_NAME [options] SEARCH_TERMS
+Perform case-insensitive search through the whole man page content.
+Positional arguments:
+  SEARCH_TERMS    Word or words you want to search for. If you provide
+                  more than one word and want to search for that exact
+                  phrase put the whole phrase in quotes. Otherwise the 
+                  output will contain man pages that contain either of 
+                  the provided words. 
+Optional arugments:
+  -h, --help    This message.
+  -n, --name-search
+                Search for the term only in the man page names and 
+                display the list of matching entries with a short 
+                description. Same as \`whatis term\` or 
+                \`man -f term\`.
+  -d, --description-search
+                Search for the term within the description of the NAME 
+                section and display the list of matching entries with 
+                the description that was searched through. Same as 
+                \`apropos term\` or \`man -k term\`.
+                
+Examples:
+  1. Find all man pages that contain the 'egg' word:
+      $SCRIPT_NAME egg
+  2. Find all man pages that contain the 'write to the file' phrase:
+      $SCRIPT_NAME 'write to the file'
+  3. Find all man pages that contain either 'hello' or 'world' words:
+      $SCRIPT_NAME hello world
+  4. Show all man pages with the 'socket' name:
+      $SCRIPT_NAME -n socket 
+EOF
+}
+
+
+##### HELPER FUNCTIONS END #####
+
+
+##### PARSE ARGUMENTS BEGIN #####
+
+while [[ $# > 0 ]]
+do
+    key="$1"
+    
+    case $key in
+        -n|--name-search)
+            NAME_SEARCH="TRUE"            
+        ;;
+        -d|--description-search)
+            DESCRIPTION_SEARCH="TRUE"            
+        ;;
+        -h|--help)
+            show_help
+            exit 0 
+        ;;
+        -*) # Unknown option
+            printf "Error: option \`$key\` is not known.\n"
+            printf "Use \`$SCRIPT_NAME --help\` for more information.\n" 
+            exit 1
+        ;;
+        *) # The rest is search terms, stop parsing for options
+            break
+    esac
+    shift
+done
+
+##### PARSE ARGUMENTS END #####
+
+if [[ $NAME_SEARCH == "TRUE" ]]; then
+    man -f "$@"
+    exit 0
+fi
+
+if [[ $DESCRIPTION_SEARCH == "TRUE" ]]; then
+    man -k "$@"
+    exit 0
+fi
+
+# Get list of man page files containing searched term; destroy stderr
+SEARCH_RESULT=$(man -wK "$@" 2>/dev/null)   
+
+if [[ $SEARCH_RESULT == "" ]]; then
+    echo "No manual entry for $1"
+else
+    echo "$SEARCH_RESULT" |             # Quotes here are for handling multiline string
+        sort -u |                       # Remove duplicate lines
+        cut -d/ -f6 |                   # Get full filename
+        sed '/.*\.gz$/ s/\.[^\.]*$//' | # Remove .gz extension only if the file has it (there are a few files that don't)
+        sed 's/\.[^\.]*$//' |           # Remove numbered extension
+        xargs man -f  |                 # Get short description for each title
+        sort                            # Sort the output lines
+fi
