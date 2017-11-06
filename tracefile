@@ -1,0 +1,139 @@
+#!/usr/bin/env perl
+
+# Copyright (C) 2012,2016,2017 Ole Tange, http://ole.tange.dk and Free Software Foundation, Inc.
+# Copyright (C) 2017 Oleg Mitrofanov, http://wryway.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# at your option any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+use Getopt::Long;
+use File::Basename;
+
+$Global::progname = "tracefile";
+
+# Configure and set up vars for option parsing
+Getopt::Long::Configure("bundling","pass_through");
+my %options_hash = (
+    "directory|d" => \$opt::dir,
+    "file|f" => \$opt::file,
+    "uniq|unique|u" => \$opt::unique,
+    "exists|exist|e" => \$opt::exists,
+    "nonexists|nonexist|non-exists|non-exist|n" => \$opt::nonexists,
+    "pid|p=i" => \$opt::pid,
+    "help|h" => \$opt::help,
+);
+
+# Print help if option parsing fails 
+if (not GetOptions(%options_hash)) {
+    print_help();
+    exit(1);
+}
+
+if ($opt::help) { 
+    print_help();
+    exit(0);
+}
+
+if ($opt::dir && $opt::file) {
+    print "Error: Options --file and --directory are mutually exclusive.\n";
+    exit(1);
+}
+
+if ($opt::exists && $opt::nonexists) {
+    print "Error: Options --exists and --nonexists are mutually exclusive.\n";
+    exit(1);
+}
+
+my $cmd = shell_quote(@ARGV);
+if ($opt::pid && $cmd) {
+    print "Error: Option --pid and COMMAND argument are mutually exclusive.\n";
+    exit(1);
+}
+
+my $dir = ".";
+my $target = $opt::pid ? "-p $opt::pid" : "$cmd";
+
+open(IN, "-|", "strace -ff -e trace=file $target 2>&1") || die;
+while(<IN>) {
+    if(/chdir."(([^\\"]|\\[\\"nt])*)".\s*=\s*0/) {
+	$dir = $1;
+    }
+
+    # [pid 30817] stat("transpose/100000files.tar.gz", {st_mode=S_IFREG|0644, st_size=140853248, ...}) = 0
+    if(s/^[^\"]+"(([^\\"]|\\[\\"nt])*)".*/$1/) {
+	# Matches the strace structure for a file
+	my $file = shell_unquote($1);
+	# Relative to $dir
+	$file =~ s:^([^/]):$dir/$1:;
+	if (not (($opt::dir and not -d $file)
+	  or ($opt::file and not -f $file)
+	  or ($opt::exists and not -e $file)
+	  or ($opt::nonexists and -e $file)
+	  or ($opt::unique and $seen{$file}++))) {
+	    print "$file\n";
+	}
+    }
+}
+
+sub shell_unquote {
+    # Unquote strings from shell_quote
+    # Returns:
+    #   string with shell quoting removed
+    my @strings = (@_);
+    my $arg;
+    for $arg (@strings) {
+        if(not defined $arg) {
+            $arg = "";
+        }
+        $arg =~ s/'\n'/\n/g; # filenames with '\n' is quoted using \'
+        $arg =~ s/\\([\002-\011\013-\032])/$1/g;
+        $arg =~ s/\\([\#\?\`\(\)\{\}\*\>\<\~\|\; \"\!\$\&\'])/$1/g;
+        $arg =~ s/\\\\/\\/g;
+    }
+    return wantarray ? @strings : "@strings";
+}
+
+sub shell_quote {
+    # Input:
+    #   @strings = strings to be quoted
+    # Output:
+    #   @shell_quoted_strings = string quoted with \ as needed by the shell
+    my @strings = (@_);
+    for my $a (@strings) {
+        $a =~ s/([\002-\011\013-\032\\\#\?\`\(\)\{\}\[\]\^\*\>\<\~\|\; \"\!\$\&\'\202-\377])/\\$1/g;
+        $a =~ s/[\n]/'\n'/g; # filenames with '\n' is quoted using \'
+    }
+    return wantarray ? @strings : "@strings";
+}
+
+sub print_help {
+    print join(
+        "\n",
+        "Usage: " . basename($0) . " [OPTIONS] [COMMAND] [COMMAND_ARGS]",
+        "List files being accessed.",
+        "\nOptions:",
+        "  -d, --directory\tList only directories",
+        "  -e, --exists\t\tList only existing files",
+        "  -f, --file\t\tList only files",
+        "  -h, --help\t\tPrint this help",
+        "  -n, --no-exists\tList only non-existing files",
+        "  -p, --pid=PID\t\tTrace process id",
+        "  -u, --unique\t\tList only unique files",
+        "\nExamples:",
+        "  # Find a package providing a non-existent file that an",
+	"  # application foo is trying to access (and possibly fails",
+	"  # not being able to find it).\n",
+        "  tracefile -n -u foo | apt-file -f search -",
+	"\n"
+    );
+}
