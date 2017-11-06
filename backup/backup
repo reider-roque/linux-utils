@@ -1,0 +1,23 @@
+#!/bin/bash
+
+BACKUP_DIR_NAME=".backups"
+
+# Create .backups directory; -p for not producing errors if it already exists
+mkdir -p $BACKUP_DIR_NAME
+
+# Get the time once for all files/directories of the same batch to have the same datetime stamp
+now_time=$(date +"%Y.%m.%d-%H.%M.%S")
+
+for arg in "$@"
+do
+    # Check if the argument is a file or directory, skip if not
+    if ! [[ -d $arg || -f $arg ]]; then
+        echo "$arg: not a file or directory, skipping."
+    else    
+        # Construct a backup name
+        backup_name=".backups/$(basename $arg).backup.$now_time"
+
+        # -i is for asking before overwriting; -a for copying directories as well
+        cp -via $arg $backup_name 
+    fi
+done

@@ -1,0 +1,1 @@
+A simple script for backing up files and directories in Linux.
