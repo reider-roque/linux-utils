@@ -19,7 +19,6 @@
 use Getopt::Long;
 use File::Basename;
 
-$Global::progname = "tracefile";
 
 # Configure and set up vars for option parsing
 Getopt::Long::Configure("bundling","pass_through");
