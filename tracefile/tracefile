@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Original source URL: https://gitlab.com/ole.tange/tangetools/blob/master/tracefile/tracefile
+
 use Getopt::Long;
 use File::Basename;
 
@@ -25,9 +27,9 @@ Getopt::Long::Configure("bundling","pass_through");
 my %options_hash = (
     "directory|d" => \$opt::dir,
     "file|f" => \$opt::file,
-    "uniq|unique|u" => \$opt::unique,
-    "exists|exist|e" => \$opt::exists,
-    "nonexists|nonexist|non-exists|non-exist|n" => \$opt::nonexists,
+    "unique|u" => \$opt::unique,
+    "exists|e" => \$opt::exists,
+    "no-exists|n" => \$opt::noexists,
     "pid|p=i" => \$opt::pid,
     "help|h" => \$opt::help,
 );
@@ -48,8 +50,8 @@ if ($opt::dir && $opt::file) {
     exit(1);
 }
 
-if ($opt::exists && $opt::nonexists) {
-    print "Error: Options --exists and --nonexists are mutually exclusive.\n";
+if ($opt::exists && $opt::noexists) {
+    print "Error: Options --exists and --noexists are mutually exclusive.\n";
     exit(1);
 }
 
@@ -77,7 +79,7 @@ while(<IN>) {
 	if (not (($opt::dir and not -d $file)
 	  or ($opt::file and not -f $file)
 	  or ($opt::exists and not -e $file)
-	  or ($opt::nonexists and -e $file)
+	  or ($opt::noexists and -e $file)
 	  or ($opt::unique and $seen{$file}++))) {
 	    print "$file\n";
 	}
