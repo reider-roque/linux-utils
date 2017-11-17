@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+
+##### HELPER FUNCTIONS BEGIN #####
+
+SCRIPT_NAME=$(basename $0)
+
+function show_help {
+cat <<EOF
+Usage: $SCRIPT_NAME GITHUB_ACCOUNT REPO_NAME 
+Download zip archive of the current version of a GitHub repository's 
+master branch.
+
+Positional arguments:
+  GITHUB_ACCOUNT  The name of the GitHub account hosting the project.
+  REPO_NAME       The name of the repository.
+
+Optional arugments:
+  -h, --help      This message.
+                
+Examples:
+  1. Download the zip archive for linux-utils repository from the
+  reider-roque account: 
+      $SCRIPT_NAME reider-roque linux-utils 
+EOF
+}
+
+##### HELPER FUNCTIONS END #####
+
+##### PARSE ARGUMENTS BEGIN #####
+
+while [[ $# > 0 ]]
+do
+    key="$1"
+    
+    case $key in
+        -h|--help)
+            show_help
+            exit 0 
+        ;;
+        -*) # Unknown option
+            printf "Error: option \`$key\` is not known.\n"
+            printf "Use \`$SCRIPT_NAME --help\` for more information.\n" 
+            exit 1
+        ;;
+        *) # The rest is search terms, stop parsing for options
+            break
+    esac
+    shift
+done
+
+
+ACCOUNT=$1
+REPO=$2
+
+if [ -z "$ACCOUNT" ]; then
+    echo "Error: Mandatory GITHUB_ACCOUNT argument was not supplied."
+    echo "Use \`--help\` flag for script usage information."
+    exit 1
+fi
+
+if [ -z "$REPO" ]; then
+    echo "Error: Mandatory REPO_NAME argument was not supplied."
+    echo "Use \`--help\` flag for script usage information."
+    exit 1
+fi
+
+##### PARSE ARGUMENTS END #####
+
+
+URL="https://github.com/$ACCOUNT/$REPO/archive/master.zip"
+curl -L $URL -o "$REPO-$ACCOUNT".zip

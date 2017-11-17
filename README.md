@@ -10,3 +10,4 @@ A collection of handy Linux scripts.
 * `tracefile` - trace all files and directories touched by the process being monitored.
 * `view` - open a file in read-only mode in vim.
 * `winproc`- show the name of the process the selected window belongs to.
+* `ghget`- download zip archive of the current version of a GitHub repository's master branch.
