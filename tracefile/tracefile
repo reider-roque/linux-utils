@@ -34,6 +34,12 @@ my %options_hash = (
     "help|h" => \$opt::help,
 );
 
+# Print help if no arguments are provided
+if ($#ARGV < 0) {
+    print_help();
+    exit(0);
+}
+
 # Print help if option parsing fails 
 if (not GetOptions(%options_hash)) {
     print_help();
