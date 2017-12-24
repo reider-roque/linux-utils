@@ -43,7 +43,7 @@ do
             printf "Use \`$SCRIPT_NAME --help\` for more information.\n" 
             exit 1
         ;;
-        *) # The rest is search terms, stop parsing for options
+        *) # The rest is positional arguments, stop parsing for options
             break
     esac
     shift
