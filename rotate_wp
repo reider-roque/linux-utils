@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# Author: Nathan Wallace
+# Source: https://superuser.com/a/759052/273852
+
+WALLPAPERS_DIR="$HOME/Pictures/Wallpapers"
+SELECTION=$(find $WALLPAPERS_DIR -type f -name "*.jpg" -o -name "*.png" | shuf -n1)
+gsettings set org.gnome.desktop.background picture-uri "file://$SELECTION"
