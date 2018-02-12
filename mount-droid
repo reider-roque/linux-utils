@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+
+# The scripts expects fuse, jmtpfs, libmtp packages to be yum-installed.
+# Tested on CentOS 7 only.
+
+# We need this to be executed as root for mounting under /mnt
+if [ "$EUID" -ne 0 ]
+  then echo "Please re-run as root!"
+  exit
+fi
+
+# The scirpt is expected to be placed in `/opt/mount-droid/bin/`.
+# The adjacent `/opt/mount-droid/lib/` directroy is expected to have the
+# latest version of the libtmp.so.x.y.z with libtmp.so.x and libtmp.so
+# symlinks pointing to it.
+
+SCRIPT_NAME_FULL=$(readlink -f "$0")
+# Overshadowing the system (old) version of libtmp on the CentOS 7
+LIB_DIR=$(readlink -m "$SCRIPT_NAME_FULL/../../lib")
+export LD_LIBRARY_PATH="$LIB_DIR"
+
+SCRIPT_NAME=$(basename $0)
+
+##### HELPER FUNCTIONS BEGIN #####
+
+function show_help {
+cat <<EOF
+Usage: $SCRIPT_NAME [OPTIONS] [MOUNT_DIRECTORY]
+Mount or unmount Android devices.
+
+Positional arguments:
+  MOUNT_DIRECTORY 
+                The directory to mount the Android device storage onto.
+Optional arugments:
+  -h, --help    This message.
+  -d, --device BUSNUM,DEVNUM
+		Specify device to mount. The BUSNUM and DEVNUM values
+                must be separated by space. They can be obtained using
+		-l flag.
+  -l, --list    List all available Android devices.
+  -u, --unmount Unmount the device.
+                
+Examples:
+  1. List all available devices: 
+      $SCRIPT_NAME -l
+  2. Mount Android device with BUSNUM of 1 and DEVNUM of 3 to 
+     /mnt/android:
+      $SCRIPT_NAME -d 1,3 /mnt/android 
+  3. Unmount Android device from /mnt/android
+      $SCRIPT_NAME -u /mnt/android 
+
+EOF
+}
+
+function error_die {
+  echo "[ERROR] $1"
+  echo "Use \`$SCRIPT_NAME --help\` for more information." 
+  exit 1
+}
+
+
+function check_dir_exists {
+  if [ ! -d "$1" ]; then
+    error_die "The \`$1\` directory does not exist."
+  fi
+}
+
+
+function unmount_android_device {
+  check_dir_exists $1
+  fusermount -u $1
+}
+
+
+function list_android_devices {
+  jmtpfs -l
+}
+##### HELPER FUNCTIONS END #####
+
+
+##### PARSE ARGUMENTS BEGIN #####
+
+while [[ $# > 0 ]]
+do
+    key="$1"
+    
+    case $key in
+        -h|--help)
+            show_help
+            exit 0 
+        ;;
+        -u|--unmount)
+            unmount_android_device $2
+            exit 0
+        ;;
+        -l|--list)
+            list_android_devices
+            exit 0
+        ;;
+        -d|--device)
+            DEVICE=$2
+            shift
+        ;;
+        -*) # Unknown option
+            error_die "Option \`$key\` is not known."
+        ;;
+        *) # The last argument is the mount directory; get it and stop parsing 
+            MOUNT_DIR=$key 
+            check_dir_exists $MOUNT_DIR
+            break
+    esac
+    shift
+done
+
+##### PARSE ARGUMENTS END #####
+
+jmtpfs -device=$DEVICE -o allow_other $MOUNT_DIR

@@ -15,3 +15,4 @@ A collection of handy Linux scripts.
 * `ghget`- download zip archive of the current version of a GitHub repository's
   master branch.
 * `rotate_wp` - rotate the wallpaper for Gnome 3 desktop
+* `mount-droid` - A helper utility for mounting Android devices on Linux
