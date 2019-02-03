@@ -39,6 +39,7 @@ func main() {
 		// Lowercase the word and translation
 		lineParts[0] = strings.ToLower(lineParts[0])
 		lineParts[1] = strings.ToLower(lineParts[1])
+
 		// Drop links to audio with incorrect pronounciation
 		for _, word := range wordsBadPronounciation {
 			// Drop quotes for comparison with slice expressions
@@ -47,6 +48,13 @@ func main() {
 				break
 			}
 		}
+
+		// Replace https:// links with http:// for audio links;
+		// Anki for som reason does not handle https:// links
+		if strings.HasPrefix(lineParts[5], "\"https") {
+			lineParts[5] = "\"http" + lineParts[5][6:]
+		}
+
 		lines[i] = strings.Join(lineParts, ";")
 	}
 
