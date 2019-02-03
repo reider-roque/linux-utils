@@ -1,9 +1,12 @@
 package main
 
 import (
+	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -27,7 +30,11 @@ func main() {
 	}
 
 	// Create a backup
-	err = ioutil.WriteFile(*filePath+".backup", []byte(input), 0644)
+	backupFilePath, err := getBackupFilePath(*filePath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = ioutil.WriteFile(backupFilePath, []byte(input), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -63,4 +70,20 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func getBackupFilePath(filePath string) (string, error) {
+	backupFilePath := filePath + ".backup"
+	if _, err := os.Stat(backupFilePath); os.IsNotExist(err) {
+		return backupFilePath, nil
+	}
+
+	for i := 1; i < 100; i++ {
+		backupFilePath = fmt.Sprintf("%s.backup.%d", filePath, i)
+		if _, err := os.Stat(backupFilePath); os.IsNotExist(err) {
+			return backupFilePath, nil
+		}
+	}
+
+	return "", errors.New("Too many backups have already been generated.")
 }
