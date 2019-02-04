@@ -62,6 +62,9 @@ func main() {
 			lineParts[5] = "\"http" + lineParts[5][6:]
 		}
 
+		// Replace Russian ё with е
+		lineParts[1] = strings.Replace(lineParts[1], "ё", "е", -1)
+
 		lines[i] = strings.Join(lineParts, ";")
 	}
 
