@@ -13,16 +13,22 @@ import (
 var filePath = flag.String("filepath", "",
 	"Path to the LinguaLeo dictionary file")
 
+var badPronunciationWords = []string{
+	"moat", "gourmand", "contract", "debacle", "disciplinary", "by ear",
+	"fuchsia", "per diem", "divert", "fuchsia", "quiesce", "touche", "urinal",
+	"perdure", "sesquipedalian", "desideratum", "appaling", "feng shui",
+	"labyrinthian", "have at it",
+}
+
+var properTranscriptionMap = map[string]string{
+	"turquoise": "ˈtɜrˌkɔɪz",
+}
+
 func main() {
 	flag.Parse()
 	if *filePath == "" {
 		log.Fatalln("Path to the LinguaLeo dictionary file must be supplied.")
 	}
-
-	wordsBadPronounciation := []string{"moat", "gourmand", "contract",
-		"debacle", "disciplinary", "by ear", "fuchsia", "per diem", "divert",
-		"fuchsia", "quiesce", "touche", "urinal", "perdure", "sesquipedalian",
-		"desideratum", "appaling"}
 
 	input, err := ioutil.ReadFile(*filePath)
 	if err != nil {
@@ -47,11 +53,20 @@ func main() {
 		lineParts[0] = strings.ToLower(lineParts[0])
 		lineParts[1] = strings.ToLower(lineParts[1])
 
-		// Drop links to audio with incorrect pronounciation
-		for _, word := range wordsBadPronounciation {
+		// Drop audio links for words with incorrect pronounciation
+		for _, word := range badPronunciationWords {
 			// Drop quotes for comparison with slice expressions
 			if lineParts[0][1:len(lineParts[0])-1] == word {
 				lineParts[5] = ""
+				break
+			}
+		}
+
+		// Replace incorrect transcriptions for some words
+		for word, transcription := range properTranscriptionMap {
+			// Drop quotes for comparison with slice expressions
+			if lineParts[0][1:len(lineParts[0])-1] == word {
+				lineParts[3] = transcription
 				break
 			}
 		}
