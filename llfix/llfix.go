@@ -17,11 +17,15 @@ var badPronunciationWords = []string{
 	"moat", "gourmand", "contract", "debacle", "disciplinary", "by ear",
 	"fuchsia", "per diem", "divert", "fuchsia", "quiesce", "touche", "urinal",
 	"perdure", "sesquipedalian", "desideratum", "appaling", "feng shui",
-	"labyrinthian", "have at it",
+	"labyrinthian", "have at it", "compendium",
 }
 
 var properTranscriptionMap = map[string]string{
-	"turquoise": "ˈtɜrˌkɔɪz",
+	"turquoise":    "ˈtɜrˌkɔɪz",
+	"sisyphus":     "ˈsɪsəfəs",
+	"nourish":      "'nɜrɪʃ",
+	"gourmand":     "ˌɡɔrˈmɑnd",
+	"commensurate": "kəˈmensrət",
 }
 
 func main() {
@@ -69,6 +73,27 @@ func main() {
 				lineParts[3] = transcription
 				break
 			}
+		}
+
+		// Drop <img src=''> enclosure from the image link
+		if strings.HasPrefix(lineParts[2], "\"<img src='") {
+			lineParts[2] = "\"" + lineParts[2][11:]
+		}
+		if strings.HasSuffix(lineParts[2], "'>\"") {
+			lineParts[2] = lineParts[2][:len(lineParts[2])-3] + "\""
+		}
+
+		// Fix http:https:// links in image link field
+		if strings.HasPrefix(lineParts[2], "\"http:http") {
+			lineParts[2] = "\"" + lineParts[2][6:]
+		}
+
+		// Drop [sound:] enclosure from the audio link
+		if strings.HasPrefix(lineParts[5], "\"[sound:") {
+			lineParts[5] = "\"" + lineParts[5][8:]
+		}
+		if strings.HasSuffix(lineParts[5], "]\"") {
+			lineParts[5] = lineParts[5][:len(lineParts[5])-2] + "\""
 		}
 
 		// Replace https:// links with http:// for audio links;
