@@ -10,9 +10,6 @@ import (
 	"strings"
 )
 
-var filePath = flag.String("filepath", "",
-	"Path to the LinguaLeo dictionary file")
-
 var badPronunciationWords = []string{
 	"moat", "gourmand", "contract", "debacle", "disciplinary", "by ear",
 	"fuchsia", "per diem", "divert", "fuchsia", "quiesce", "touche", "urinal",
@@ -26,10 +23,21 @@ var properTranscriptionMap = map[string]string{
 	"nourish":      "'nɜrɪʃ",
 	"gourmand":     "ˌɡɔrˈmɑnd",
 	"commensurate": "kəˈmensrət",
+	"debacle":      "dɪːbˈʌkl",
 }
 
 func main() {
+	flag.Usage = func() {
+		fmt.Printf("Usage: %s LLFILE\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
+	if flag.NArg() == 0 {
+		log.Fatalln("Path to the LinguaLeo dictionary file must be supplied.")
+	}
+
+	filePath := &flag.Args()[0]
 	if *filePath == "" {
 		log.Fatalln("Path to the LinguaLeo dictionary file must be supplied.")
 	}
@@ -104,6 +112,9 @@ func main() {
 
 		// Replace Russian ё with е
 		lineParts[1] = strings.Replace(lineParts[1], "ё", "е", -1)
+
+		// Drop the tag
+		lineParts[6] = ""
 
 		lines[i] = strings.Join(lineParts, ";")
 	}
