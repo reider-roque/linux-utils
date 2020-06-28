@@ -24,6 +24,10 @@ var properTranscriptionMap = map[string]string{
 	"gourmand":     "ˌɡɔrˈmɑnd",
 	"commensurate": "kəˈmensrət",
 	"debacle":      "dɪːbˈʌkl",
+	"liaison":      "li'eɪzɒn",
+	"quiesce":      "kwaɪˈɛs",
+	"aardvark":     "ˈɑrdˌvɑrk",
+	"grungy":       "ˈgrʌndʒi",
 }
 
 func main() {
