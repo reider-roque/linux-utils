@@ -1,8 +1,22 @@
 #!/usr/bin/env bash
 
 # Author: Nathan Wallace
-# Source: https://superuser.com/a/759052/273852
+# Original Source: https://superuser.com/a/759052/273852
 
-WALLPAPERS_DIR="$HOME/Pictures/Wallpapers"
+# NOTE (Jul 02, 2023): Anacron by default runs as root and the wallpaper is
+# set for the root user. To deal with this, the script was modified to take
+# TARGET_USER.
+
+# Set this to the desired user.
+TARGET_USER=user
+
+WALLPAPERS_DIR="/home/$TARGET_USER/Pictures/Wallpapers"
 SELECTION=$(find $WALLPAPERS_DIR -type f -name "*.jpg" -o -name "*.png" | shuf -n1)
-gsettings set org.gnome.desktop.background picture-uri "file://$SELECTION"
+TARGET_UID=$(id -u $TARGET_USER)
+
+# echo DEBUG: $WALLPAPERS_DIR
+# echo DEBUG: $SELECTION
+# echo DEBUG: $TARGET_UID
+
+# gsettings set org.gnome.desktop.background picture-uri "file://$SELECTION"
+sudo -u $TARGET_USER DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$TARGET_UID/bus gsettings set org.gnome.desktop.background picture-uri "file://$SELECTION"
