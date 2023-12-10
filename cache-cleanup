@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+
+function indented_echo() {
+    indent="$1"
+    str=$2
+    count="$(seq -s" " 1 $(($indent*4)))"
+    printf ' %.0s' $count 
+    echo $str | while read line; do
+        printf "$line\n"
+    done
+}
+
+### Clean up snap cache
+echo "* Cleaning up snap cache..."
+SNAP_DIR=/var/lib/snapd
+
+indented_echo 1 "Before snap cache cleanup:"
+indented_echo 1 $(du -sh ${SNAP_DIR})
+
+# Removes old snap revisions
+set -eu
+LANG=en_US.UTF-8 snap list --all | awk '/disabled/{print $1, $3}' |
+    while read snapname revision; do
+        snap remove "$snapname" --revision="$revision"
+    done
+
+# Clean up the cache
+rm -rf /var/lib/snapd/cache/*
+
+indented_echo 1 "After snap chache cleanup:"
+indented_echo 1 $(du -sh ${SNAP_DIR})
+
+echo "* Cleaning up pip cache..."
+
+indented_echo 1 "Before pip cache cleanup:"
+indented_echo 1 "$(pip cache info)"
+
+pip cache purge
+
+indented_echo 1 "After pip cache cleanup:"
+indented_echo 1 "$(pip cache info)"
